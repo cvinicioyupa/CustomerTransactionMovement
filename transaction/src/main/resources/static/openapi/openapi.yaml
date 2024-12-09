@@ -1,0 +1,107 @@
+openapi: 3.0.1
+info:
+  title: Movimiento API
+  description: API para gestionar movimientos de cuentas.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/v1
+paths:
+  /movements:
+    get:
+      summary: Lista todos los movimientos
+      responses:
+        '200':
+          description: Lista de movimientos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Movement'
+    post:
+      summary: Crea un nuevo movimiento
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Movement'
+      responses:
+        '201':
+          description: Movimiento creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movement'
+  /movements/{id}:
+    get:
+      summary: Obtiene un movimiento por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Movimiento encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movement'
+        '404':
+          description: Movimiento no encontrado
+    put:
+      summary: Actualiza un movimiento por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Movement'
+      responses:
+        '200':
+          description: Movimiento actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movement'
+    delete:
+      summary: Elimina un movimiento por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Movimiento eliminado
+components:
+  schemas:
+    Movement:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+          format: date-time
+        type:
+          type: string
+        value:
+          type: number
+          format: double
+        balance:
+          type: number
+          format: double
+        status:
+          type: boolean
+        accountNumber:
+          type: integer
