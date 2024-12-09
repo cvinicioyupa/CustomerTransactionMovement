@@ -51,38 +51,6 @@ paths:
                 $ref: '#/components/schemas/Movement'
         '404':
           description: Movimiento no encontrado
-    put:
-      summary: Actualiza un movimiento por ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Movement'
-      responses:
-        '200':
-          description: Movimiento actualizado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Movement'
-    delete:
-      summary: Elimina un movimiento por ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Movimiento eliminado
 components:
   schemas:
     Movement:
