@@ -124,18 +124,7 @@ public Mono<Movement> create(Movement movement) {
         return Mono.justOrEmpty(movementRepository.findById(id));
     }
 
-    public Mono<Movement> update(int id, Movement movement) {
-        if (movementRepository.existsById(id)) {
-            return Mono.just(movementRepository.save(movement));
-        } else {
-            return Mono.empty();
-        }
-    }
-
-    public Mono<Void> delete(int id) {
-        movementRepository.deleteById(id);
-        return Mono.empty();
-    }
+    
 
     public Flux<Movement> getAll() {
         return Flux.fromIterable(movementRepository.findAll());
