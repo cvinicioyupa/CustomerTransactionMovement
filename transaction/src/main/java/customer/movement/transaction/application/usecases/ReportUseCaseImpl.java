@@ -1,58 +1,57 @@
+package customer.movement.transaction.application.usecases;
 
-package customer.movement.transaction.service;
-
-import org.springframework.stereotype.Service;
-
-import customer.movement.transaction.model.Account;
-import customer.movement.transaction.model.Movement;
-import customer.movement.transaction.repository.AccountRepository;
-import customer.movement.transaction.repository.MovementRepository;
-
-
-import reactor.core.publisher.Mono;
-
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.HashMap;
+import customer.movement.transaction.domain.model.Account;
+import customer.movement.transaction.domain.model.Movement;
+import customer.movement.transaction.domain.ports.in.ReportUseCase;
+import customer.movement.transaction.domain.ports.out.AccountRepositoryPort;
+import customer.movement.transaction.domain.ports.out.MovementRepositoryPort;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Row;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class ReportService {
-    private final AccountRepository accountRepository;
-    private final MovementRepository movementRepository;
+@RequiredArgsConstructor
+public class ReportUseCaseImpl implements ReportUseCase {
+    
+    private final AccountRepositoryPort accountRepositoryPort;
+    private final MovementRepositoryPort movementRepositoryPort;
 
-  
-    public ReportService(AccountRepository accountRepository, MovementRepository movementRepository) {
-        this.accountRepository = accountRepository;
-        this.movementRepository = movementRepository;
-    }
-
+    @Override
     public Mono<Map<String, Object>> generateReport(int clientId, LocalDate startDate, LocalDate endDate, String format) {
         log.info("Generating report for client id: {} from {} to {}", clientId, startDate, endDate);
 
-        List<Account> accounts = accountRepository.findByClientIdentification(clientId);
+        List<Account> accounts = accountRepositoryPort.findByClientIdentification(clientId);
         Map<String, Object> reportData = new HashMap<>();
         reportData.put("accounts", accounts.stream().map(account -> {
             Map<String, Object> accountData = new HashMap<>();
             accountData.put("account", account);
-            accountData.put("movements", movementRepository.findByAccountNumberAndDateBetween(account.getNumber(), Timestamp.valueOf(startDate.atStartOfDay()), Timestamp.valueOf(endDate.atStartOfDay())));
+            accountData.put("movements", movementRepositoryPort.findByAccountNumberAndDateBetween(
+                    account.getNumber(), 
+                    Timestamp.valueOf(startDate.atStartOfDay()), 
+                    Timestamp.valueOf(endDate.atStartOfDay())
+            ));
             return accountData;
         }).collect(Collectors.toList()));
 
         return Mono.just(reportData);
     }
 
+    @Override
     public byte[] convertToExcel(Map<String, Object> reportData) {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Report");
@@ -81,7 +80,7 @@ public class ReportService {
                     row.createCell(2).setCellValue(account.getInitialBalance());
                     row.createCell(3).setCellValue(movement.getDate().toString());
                     row.createCell(4).setCellValue(movement.getType());
-                    row.createCell(5).setCellValue(movement.getValue());
+                    row.createCell(5).setCellValue(movement.getAmount());
                     row.createCell(6).setCellValue(movement.getBalance());
                 }
             }

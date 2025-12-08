@@ -1,4 +1,3 @@
-
 package customer.movement.transaction;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -7,50 +6,62 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
-import java.util.Optional;
-import customer.movement.transaction.model.Account;
-import customer.movement.transaction.model.Movement;
-import customer.movement.transaction.repository.AccountRepository;
-import customer.movement.transaction.repository.MovementRepository;
-import customer.movement.transaction.service.MovementService;
+
+import customer.movement.transaction.domain.model.Account;
+import customer.movement.transaction.domain.model.Movement;
+import customer.movement.transaction.domain.ports.out.AccountRepositoryPort;
+import customer.movement.transaction.domain.ports.out.MovementRepositoryPort;
+import customer.movement.transaction.application.usecases.MovementUseCaseImpl;
 
 @ExtendWith(MockitoExtension.class)
 public class MovementServiceTest {
 
     @Mock
-    private MovementRepository movementRepository;
+    private MovementRepositoryPort movementRepositoryPort;
 
     @Mock
-    private AccountRepository accountRepository;
+    private AccountRepositoryPort accountRepositoryPort;
 
     @InjectMocks
-    private MovementService movementService;
+    private MovementUseCaseImpl movementUseCase;
 
     private Account account;
     private Movement movement;
 
     @BeforeEach
     void setUp() {
-        account = new Account();
-        account.setNumber(123);
-        account.setInitialBalance(5000.0);
+        account = Account.builder()
+                .number(123)
+                .type("Ahorros")
+                .initialBalance(5000.0)
+                .status(true)
+                .clientIdentification(1)
+                .build();
 
-        movement = new Movement();
-        movement.setAccountNumber(123);
-        movement.setType("credito");
-        movement.setValue(1000.0);
+        movement = Movement.builder()
+                .accountNumber(123)
+                .type("credito")
+                .amount(1000.0)
+                .status(true)
+                .build();
     }
 
     @Test
     void testCreateMovementSuccess() {
-        when(accountRepository.findById(anyInt())).thenReturn(Optional.of(account));
-        when(movementRepository.save(any(Movement.class))).thenReturn(movement);
+        when(accountRepositoryPort.findById(anyInt())).thenReturn(Mono.just(account));
+        when(movementRepositoryPort.findAll()).thenReturn(Flux.empty());
+        when(accountRepositoryPort.save(any(Account.class))).thenReturn(Mono.just(account));
+        when(movementRepositoryPort.save(any(Movement.class))).thenAnswer(invocation -> {
+            Movement savedMovement = invocation.getArgument(0);
+            return Mono.just(savedMovement);
+        });
 
-        Mono<Movement> result = movementService.create(movement);
+        Mono<Movement> result = movementUseCase.createMovement(movement);
 
         assertNotNull(result);
         result.subscribe(mv -> {
@@ -59,40 +70,45 @@ public class MovementServiceTest {
             assertEquals("credito", mv.getType());
         });
 
-        verify(accountRepository, times(1)).findById(123);
-        verify(movementRepository, times(1)).save(movement);
+        verify(accountRepositoryPort, times(1)).findById(123);
+        verify(movementRepositoryPort, times(1)).save(any(Movement.class));
     }
 
     @Test
     void testCreateMovementInsufficientBalance() {
-        movement.setType("debito");
-        movement.setValue(6000.0);
+        movement = Movement.builder()
+                .accountNumber(123)
+                .type("debito")
+                .amount(6000.0)
+                .status(true)
+                .build();
 
-        when(accountRepository.findById(anyInt())).thenReturn(Optional.of(account));
+        when(accountRepositoryPort.findById(anyInt())).thenReturn(Mono.just(account));
+        when(movementRepositoryPort.findAll()).thenReturn(Flux.empty());
 
-        Mono<Movement> result = movementService.create(movement);
+        Mono<Movement> result = movementUseCase.createMovement(movement);
 
         result.subscribe(
             mv -> fail("Expected an IllegalArgumentException"),
             error -> assertTrue(error instanceof IllegalArgumentException)
         );
 
-        verify(accountRepository, times(1)).findById(123);
-        verify(movementRepository, never()).save(any(Movement.class));
+        verify(accountRepositoryPort, times(1)).findById(123);
+        verify(movementRepositoryPort, never()).save(any(Movement.class));
     }
 
     @Test
     void testCreateMovementAccountNotFound() {
-        when(accountRepository.findById(anyInt())).thenReturn(Optional.empty());
+        when(accountRepositoryPort.findById(anyInt())).thenReturn(Mono.empty());
 
-        Mono<Movement> result = movementService.create(movement);
+        Mono<Movement> result = movementUseCase.createMovement(movement);
 
         result.subscribe(
             mv -> fail("Expected an IllegalArgumentException"),
             error -> assertTrue(error instanceof IllegalArgumentException)
         );
 
-        verify(accountRepository, times(1)).findById(123);
-        verify(movementRepository, never()).save(any(Movement.class));
+        verify(accountRepositoryPort, times(1)).findById(123);
+        verify(movementRepositoryPort, never()).save(any(Movement.class));
     }
 }
