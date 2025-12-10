@@ -3,7 +3,10 @@ package customer.movement.transaction.infrastructure.web.controller;
 import customer.movement.transaction.domain.ports.in.AccountUseCase;
 import customer.movement.transaction.infrastructure.web.dto.AccountDto;
 import customer.movement.transaction.infrastructure.web.mapper.AccountDtoMapper;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -23,25 +26,29 @@ public class AccountController {
     }
 
     @PostMapping
-    public Mono<AccountDto> createAccount(@RequestBody AccountDto accountDto) {
+    public Mono<ResponseEntity<AccountDto>> createAccount(@Valid @RequestBody AccountDto accountDto) {
         return accountUseCase.createAccount(accountDtoMapper.toDomain(accountDto))
-                .map(accountDtoMapper::toDto);
+                .map(account -> new ResponseEntity<>(accountDtoMapper.toDto(account), HttpStatus.CREATED));
     }
 
     @GetMapping("/{id}")
-    public Mono<AccountDto> getAccount(@PathVariable int id) {
+    public Mono<ResponseEntity<AccountDto>> getAccount(@PathVariable int id) {
         return accountUseCase.getAccountById(id)
-                .map(accountDtoMapper::toDto);
+                .map(account -> new ResponseEntity<>(accountDtoMapper.toDto(account), HttpStatus.OK))
+                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @PutMapping("/{id}")
-    public Mono<AccountDto> updateAccount(@PathVariable int id, @RequestBody AccountDto accountDto) {
+    public Mono<ResponseEntity<AccountDto>> updateAccount(@PathVariable int id, @Valid @RequestBody AccountDto accountDto) {
         return accountUseCase.updateAccount(id, accountDtoMapper.toDomain(accountDto))
-                .map(accountDtoMapper::toDto);
+                .map(account -> new ResponseEntity<>(accountDtoMapper.toDto(account), HttpStatus.OK))
+                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @DeleteMapping("/{id}")
-    public Mono<Void> deleteAccount(@PathVariable int id) {
-        return accountUseCase.deleteAccount(id);
+    public Mono<ResponseEntity<Void>> deleteAccount(@PathVariable int id) {
+        return accountUseCase.deleteAccount(id)
+                .then(Mono.just(new ResponseEntity<Void>(HttpStatus.NO_CONTENT)))
+                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 }

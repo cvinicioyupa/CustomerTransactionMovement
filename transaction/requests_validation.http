@@ -1,0 +1,146 @@
+##################################################
+# 🧪 PRUEBAS DE VALIDACIÓN - CustomerTransactionMovement
+##################################################
+
+### ✅ 1️⃣ CREAR CUENTA VÁLIDA
+POST http://localhost:8085/api/v1/accounts
+Content-Type: application/json
+
+{
+  "number": 200,
+  "type": "Ahorros",
+  "initialBalance": 5000.0,
+  "status": true,
+  "clientIdentification": 2
+}
+
+### ❌ 2️⃣ ERROR: CREAR CUENTA - number ES NULL (Debería validar @NotNull)
+POST http://localhost:8085/api/v1/accounts
+Content-Type: application/json
+
+{
+  "number": 0,
+  "type": "Ahorros",
+  "initialBalance": 5000.0,
+  "status": true,
+  "clientIdentification": 2
+}
+
+### ❌ 3️⃣ ERROR: CREAR CUENTA - type VACÍO (Debería validar @NotBlank)
+POST http://localhost:8085/api/v1/accounts
+Content-Type: application/json
+
+{
+  "number": 201,
+  "type": "",
+  "initialBalance": 5000.0,
+  "status": true,
+  "clientIdentification": 2
+}
+
+### ❌ 4️⃣ ERROR: CREAR CUENTA - initialBalance NEGATIVO (Debería validar @DecimalMin)
+POST http://localhost:8085/api/v1/accounts
+Content-Type: application/json
+
+{
+  "number": 202,
+  "type": "Corriente",
+  "initialBalance": -1000.0,
+  "status": true,
+  "clientIdentification": 2
+}
+
+### ❌ 5️⃣ ERROR: CREAR CUENTA - clientIdentification NEGATIVO (Debería validar @Min)
+POST http://localhost:8085/api/v1/accounts
+Content-Type: application/json
+
+{
+  "number": 203,
+  "type": "Ahorros",
+  "initialBalance": 5000.0,
+  "status": true,
+  "clientIdentification": -1
+}
+
+### ✅ 6️⃣ CREAR MOVIMIENTO VÁLIDO - CRÉDITO
+POST http://localhost:8085/api/v1/movements
+Content-Type: application/json
+
+{
+  "accountNumber": 200,
+  "type": "credito",
+  "amount": 1000.0,
+  "status": true
+}
+
+### ❌ 7️⃣ ERROR: CREAR MOVIMIENTO - accountNumber IS NULL (Debería validar @NotNull)
+POST http://localhost:8085/api/v1/movements
+Content-Type: application/json
+
+{
+  "accountNumber": 0,
+  "type": "credito",
+  "amount": 1000.0,
+  "status": true
+}
+
+### ❌ 8️⃣ ERROR: CREAR MOVIMIENTO - type VACÍO (Debería validar @NotBlank)
+POST http://localhost:8085/api/v1/movements
+Content-Type: application/json
+
+{
+  "accountNumber": 200,
+  "type": "",
+  "amount": 1000.0,
+  "status": true
+}
+
+### ❌ 9️⃣ ERROR: CREAR MOVIMIENTO - type INVÁLIDO (Debe ser 'debito' o 'credito')
+POST http://localhost:8085/api/v1/movements
+Content-Type: application/json
+
+{
+  "accountNumber": 200,
+  "type": "transferencia",
+  "amount": 1000.0,
+  "status": true
+}
+
+### ❌ 🔟 ERROR: CREAR MOVIMIENTO - amount ES NULL
+POST http://localhost:8085/api/v1/movements
+Content-Type: application/json
+
+{
+  "accountNumber": 200,
+  "type": "credito",
+  "amount": null,
+  "status": true
+}
+
+### ❌ 1️⃣1️⃣ ERROR: CREAR MOVIMIENTO - amount MENOR QUE 0.01
+POST http://localhost:8085/api/v1/movements
+Content-Type: application/json
+
+{
+  "accountNumber": 200,
+  "type": "debito",
+  "amount": 0.001,
+  "status": true
+}
+
+### ❌ 1️⃣2️⃣ ERROR: CREAR MOVIMIENTO - amount NEGATIVO
+POST http://localhost:8085/api/v1/movements
+Content-Type: application/json
+
+{
+  "accountNumber": 200,
+  "type": "credito",
+  "amount": -500.0,
+  "status": true
+}
+
+### ✅ 1️⃣3️⃣ OBTENER MOVIMIENTO POR ID
+GET http://localhost:8085/api/v1/movements/1
+
+### ✅ 1️⃣4️⃣ LISTAR TODOS LOS MOVIMIENTOS
+GET http://localhost:8085/api/v1/movements

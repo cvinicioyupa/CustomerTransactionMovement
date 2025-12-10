@@ -25,54 +25,83 @@ public class MovementUseCaseImpl implements MovementUseCase {
     public Mono<Movement> createMovement(Movement movement) {
         log.info("Creacion del movimiento: {}", movement.getAccountNumber());
 
+        return validateMovementAmount(movement)
+                .flatMap(validMovement -> findAccount(validMovement.getAccountNumber())
+                    .flatMap(account -> calculateNewBalance(account, validMovement)
+                        .flatMap(newBalance -> updateAccountAndSaveMovement(account, validMovement, newBalance))
+                    )
+                );
+    }
+
+    private Mono<Movement> validateMovementAmount(Movement movement) {
         if (movement.getAmount() <= 0) {
             log.error("El monto tiene que ser mayor a 0.");
             return Mono.error(new IllegalArgumentException("El monto tiene que ser mayor a 0"));
         }
+        return Mono.just(movement);
+    }
 
-        return accountRepositoryPort.findById(movement.getAccountNumber())
-            .flatMap(account -> {
-                return movementRepositoryPort.findAll()
-                    .filter(m -> m.getAccountNumber() == movement.getAccountNumber())
-                    .collectList()
-                    .flatMap(movements -> {
-                        // Si no existe movimiento previo traigo el saldo inicial de la cuenta
-                        double newBalance = movements.stream()
-                            .max(Comparator.comparing(Movement::getId))
-                            .map(Movement::getBalance)
-                            .orElse(account.getInitialBalance());
+    private Mono<Account> findAccount(int accountNumber) {
+        return accountRepositoryPort.findById(accountNumber)
+                .switchIfEmpty(Mono.error(
+                    new IllegalArgumentException("La cuenta no existe: " + accountNumber)
+                ));
+    }
 
-                        if ("debito".equalsIgnoreCase(movement.getType())) {
-                            if (newBalance < movement.getAmount()) {
-                                log.error("La cuenta no tiene el saldo suficiente: {}", movement.getAccountNumber());
-                                return Mono.<Movement>error(new IllegalArgumentException("Saldo no disponible"));
-                            }
-                            newBalance -= movement.getAmount();
-                        } else if ("credito".equalsIgnoreCase(movement.getType())) {
-                            newBalance += movement.getAmount();
-                        }
+    private Mono<Double> calculateNewBalance(Account account, Movement movement) {
+        return movementRepositoryPort.findAll()
+                .filter(m -> m.getAccountNumber() == movement.getAccountNumber())
+                .collectList()
+                .flatMap(movements -> {
+                    double currentBalance = movements.stream()
+                        .max(Comparator.comparing(Movement::getId))
+                        .map(Movement::getBalance)
+                        .orElse(account.getInitialBalance());
 
-                        movement.setBalance(newBalance);
-                        movement.setDate(java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
-                        
-                        Account updatedAccount = Account.builder()
-                                .number(account.getNumber())
-                                .type(account.getType())
-                                .initialBalance(newBalance)
-                                .status(account.isStatus())
-                                .clientIdentification(account.getClientIdentification())
-                                .build();
-                        
-                        return accountRepositoryPort.save(updatedAccount)
-                                .flatMap(savedAccount -> {
-                                    log.info("El movimiento se registro con exito: {}", movement.getAccountNumber());
-                                    return movementRepositoryPort.save(movement);
-                                });
-                    });
-            })
-            .switchIfEmpty(
-                Mono.error(new IllegalArgumentException("La cuenta no existe: " + movement.getAccountNumber()))
-            );
+                    return validateAndApplyMovement(currentBalance, movement);
+                });
+    }
+
+    private Mono<Double> validateAndApplyMovement(double currentBalance, Movement movement) {
+        if ("debito".equalsIgnoreCase(movement.getType())) {
+            return validateSufficientBalance(currentBalance, movement.getAmount())
+                    .map(valid -> currentBalance - movement.getAmount());
+        } else if ("credito".equalsIgnoreCase(movement.getType())) {
+            return Mono.just(currentBalance + movement.getAmount());
+        } else {
+            return Mono.error(new IllegalArgumentException("Tipo de movimiento inválido: " + movement.getType()));
+        }
+    }
+
+    private Mono<Boolean> validateSufficientBalance(double currentBalance, double movementAmount) {
+        if (currentBalance < movementAmount) {
+            log.error("La cuenta no tiene el saldo suficiente. Balance: {}, Monto: {}", currentBalance, movementAmount);
+            return Mono.error(new IllegalArgumentException("Saldo no disponible"));
+        }
+        return Mono.just(true);
+    }
+
+    private Mono<Movement> updateAccountAndSaveMovement(Account account, Movement movement, Double newBalance) {
+        movement.setBalance(newBalance);
+        movement.setDate(java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
+        
+        Account updatedAccount = buildUpdatedAccount(account, newBalance);
+        
+        return accountRepositoryPort.save(updatedAccount)
+                .flatMap(savedAccount -> {
+                    log.info("El movimiento se registro con exito: {}", movement.getAccountNumber());
+                    return movementRepositoryPort.save(movement);
+                });
+    }
+
+    private Account buildUpdatedAccount(Account account, Double newBalance) {
+        return Account.builder()
+                .number(account.getNumber())
+                .type(account.getType())
+                .initialBalance(newBalance)
+                .status(account.isStatus())
+                .clientIdentification(account.getClientIdentification())
+                .build();
     }
 
     @Override

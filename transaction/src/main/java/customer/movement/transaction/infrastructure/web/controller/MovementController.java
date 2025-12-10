@@ -3,7 +3,10 @@ package customer.movement.transaction.infrastructure.web.controller;
 import customer.movement.transaction.domain.ports.in.MovementUseCase;
 import customer.movement.transaction.infrastructure.web.dto.MovementDto;
 import customer.movement.transaction.infrastructure.web.mapper.MovementDtoMapper;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -17,15 +20,16 @@ public class MovementController {
     private final MovementDtoMapper movementDtoMapper;
 
     @PostMapping
-    public Mono<MovementDto> createMovement(@RequestBody MovementDto movementDto) {
+    public Mono<ResponseEntity<MovementDto>> createMovement(@Valid @RequestBody MovementDto movementDto) {
         return movementUseCase.createMovement(movementDtoMapper.toDomain(movementDto))
-                .map(movementDtoMapper::toDto);
+                .map(movement -> new ResponseEntity<>(movementDtoMapper.toDto(movement), HttpStatus.CREATED));
     }
 
     @GetMapping("/{id}")
-    public Mono<MovementDto> getMovement(@PathVariable int id) {
+    public Mono<ResponseEntity<MovementDto>> getMovement(@PathVariable int id) {
         return movementUseCase.getMovementById(id)
-                .map(movementDtoMapper::toDto);
+                .map(movement -> new ResponseEntity<>(movementDtoMapper.toDto(movement), HttpStatus.OK))
+                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping

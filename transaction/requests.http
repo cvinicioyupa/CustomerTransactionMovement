@@ -1,0 +1,98 @@
+##################################################
+# 🧪 PRUEBAS DE API - CustomerTransactionMovement
+##################################################
+
+### 1️⃣ CREAR CUENTA
+POST http://localhost:8085/api/v1/accounts
+Content-Type: application/json
+
+{
+  "number": 100,
+  "type": "Ahorros",
+  "initialBalance": 10000.0,
+  "status": true,
+  "clientIdentification": 1
+}
+
+### 2️⃣ LISTAR TODAS LAS CUENTAS
+GET http://localhost:8085/api/v1/accounts
+
+### 3️⃣ OBTENER CUENTA POR ID
+GET http://localhost:8085/api/v1/accounts/100
+
+### 4️⃣ ACTUALIZAR CUENTA
+PUT http://localhost:8085/api/v1/accounts/100
+Content-Type: application/json
+
+{
+  "number": 100,
+  "type": "Corriente",
+  "initialBalance": 10000.0,
+  "status": true,
+  "clientIdentification": 1
+}
+
+### 5️⃣ CREAR MOVIMIENTO - CRÉDITO (Aumenta saldo)
+POST http://localhost:8085/api/v1/movements
+Content-Type: application/json
+
+{
+  "accountNumber": 100,
+  "type": "credito",
+  "amount": 2000.0,
+  "status": true
+}
+
+### 6️⃣ CREAR MOVIMIENTO - DÉBITO (Disminuye saldo)
+POST http://localhost:8085/api/v1/movements
+Content-Type: application/json
+
+{
+  "accountNumber": 100,
+  "type": "debito",
+  "amount": 500.0,
+  "status": true
+}
+
+### 7️⃣ CREAR MOVIMIENTO - DÉBITO CON SALDO INSUFICIENTE (Error esperado)
+POST http://localhost:8085/api/v1/movements
+Content-Type: application/json
+
+{
+  "accountNumber": 100,
+  "type": "debito",
+  "amount": 50000.0,
+  "status": true
+}
+
+### 8️⃣ CREAR MOVIMIENTO - MONTO INVÁLIDO (Error esperado)
+POST http://localhost:8085/api/v1/movements
+Content-Type: application/json
+
+{
+  "accountNumber": 100,
+  "type": "credito",
+  "amount": -100.0,
+  "status": true
+}
+
+### 9️⃣ LISTAR TODOS LOS MOVIMIENTOS
+GET http://localhost:8085/api/v1/movements
+
+### 🔟 OBTENER MOVIMIENTO POR ID
+GET http://localhost:8085/api/v1/movements/1
+
+### 1️⃣1️⃣ GENERAR REPORTE EN JSON
+GET http://localhost:8085/api/v1/reports?clientId=1&startDate=2025-01-01&endDate=2025-12-31&format=json
+
+### 1️⃣2️⃣ GENERAR REPORTE EN EXCEL
+GET http://localhost:8085/api/v1/reports?clientId=1&startDate=2025-01-01&endDate=2025-12-31&format=excel
+
+### 1️⃣3️⃣ ELIMINAR CUENTA
+DELETE http://localhost:8085/api/v1/accounts/100
+
+### 1️⃣4️⃣ H2 CONSOLE (Base de datos en memoria)
+GET http://localhost:8085/h2-console
+# JDBC URL: jdbc:h2:mem:testdb
+# Username: sa
+# Password: (dejar en blanco)
