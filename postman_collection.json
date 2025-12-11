@@ -1,0 +1,307 @@
+{
+  "info": {
+    "name": "CustomerTransactionMovement",
+    "description": "API de Gestión de Transacciones y Cuentas",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Accounts",
+      "item": [
+        {
+          "name": "Create Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": 100,\n  \"type\": \"Ahorros\",\n  \"initialBalance\": 10000.0,\n  \"status\": true,\n  \"clientIdentification\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8085/api/v1/accounts",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8085",
+              "path": ["api", "v1", "accounts"]
+            }
+          }
+        },
+        {
+          "name": "Get All Accounts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8085/api/v1/accounts",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8085",
+              "path": ["api", "v1", "accounts"]
+            }
+          }
+        },
+        {
+          "name": "Get Account by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8085/api/v1/accounts/100",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8085",
+              "path": ["api", "v1", "accounts", "100"]
+            }
+          }
+        },
+        {
+          "name": "Update Account",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": 100,\n  \"type\": \"Corriente\",\n  \"initialBalance\": 10000.0,\n  \"status\": true,\n  \"clientIdentification\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8085/api/v1/accounts/100",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8085",
+              "path": ["api", "v1", "accounts", "100"]
+            }
+          }
+        },
+        {
+          "name": "Delete Account",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:8085/api/v1/accounts/100",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8085",
+              "path": ["api", "v1", "accounts", "100"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Movements",
+      "item": [
+        {
+          "name": "Create Movement - Credit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountNumber\": 100,\n  \"type\": \"credito\",\n  \"amount\": 2000.0,\n  \"status\": true\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8085/api/v1/movements",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8085",
+              "path": ["api", "v1", "movements"]
+            }
+          }
+        },
+        {
+          "name": "Create Movement - Debit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountNumber\": 100,\n  \"type\": \"debito\",\n  \"amount\": 500.0,\n  \"status\": true\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8085/api/v1/movements",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8085",
+              "path": ["api", "v1", "movements"]
+            }
+          }
+        },
+        {
+          "name": "Create Movement - Insufficient Balance (Error)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountNumber\": 100,\n  \"type\": \"debito\",\n  \"amount\": 50000.0,\n  \"status\": true\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8085/api/v1/movements",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8085",
+              "path": ["api", "v1", "movements"]
+            }
+          }
+        },
+        {
+          "name": "Create Movement - Invalid Amount (Error)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountNumber\": 100,\n  \"type\": \"credito\",\n  \"amount\": -100.0,\n  \"status\": true\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8085/api/v1/movements",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8085",
+              "path": ["api", "v1", "movements"]
+            }
+          }
+        },
+        {
+          "name": "Get All Movements",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8085/api/v1/movements",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8085",
+              "path": ["api", "v1", "movements"]
+            }
+          }
+        },
+        {
+          "name": "Get Movement by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8085/api/v1/movements/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8085",
+              "path": ["api", "v1", "movements", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Generate Report - JSON",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8085/api/v1/reports?clientId=1&startDate=2025-01-01&endDate=2025-12-31&format=json",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8085",
+              "path": ["api", "v1", "reports"],
+              "query": [
+                {
+                  "key": "clientId",
+                  "value": "1"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2025-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2025-12-31"
+                },
+                {
+                  "key": "format",
+                  "value": "json"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Generate Report - Excel",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8085/api/v1/reports?clientId=1&startDate=2025-01-01&endDate=2025-12-31&format=excel",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8085",
+              "path": ["api", "v1", "reports"],
+              "query": [
+                {
+                  "key": "clientId",
+                  "value": "1"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2025-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2025-12-31"
+                },
+                {
+                  "key": "format",
+                  "value": "excel"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tools",
+      "item": [
+        {
+          "name": "H2 Console",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8085/h2-console",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8085",
+              "path": ["h2-console"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
